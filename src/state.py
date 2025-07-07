@@ -18,8 +18,9 @@ class ChatState(BaseModel):
     profile: UserProfile = Field(default_factory=UserProfile)
     current_query: str = ""
     recommendations: Optional[list] = None
-
-    # 対話制御用
     pending_question: Optional[str] = None
     teaching_snippet: Optional[str] = None
     need_more_info: bool = False
+
+    # ★ ここを追加
+    bot_msg: Optional[str] = None

@@ -18,17 +18,15 @@ def _fmt(movie):
 def generate_answer(state: ChatState):
     # ① pending_question 優先
     if state.pending_question:
-        return {
-            "bot_msg": state.pending_question,
-            "pending_question": None,  # 次ターンでは消える
-        }
+        state.bot_msg = state.pending_question
+        state.pending_question = None  # 次ターンでは消える
+        return state
 
     # ② teach_snippet
     if state.teaching_snippet and not state.recommendations:
-        return {
-            "bot_msg": state.teaching_snippet,
-            "teaching_snippet": None,
-        }
+        state.bot_msg = state.teaching_snippet
+        state.teaching_snippet = None
+        return state
 
     # ③ レコメンド結果
     if state.recommendations:
@@ -42,10 +40,10 @@ def generate_answer(state: ChatState):
             気になる作品があれば教えてください！👍/👎 の感想も歓迎です。
         """
         )
-        return {
-            "bot_msg": msg,
-            "recommendations": None,  # 一度出したらクリア
-        }
+        state.bot_msg = msg
+        state.recommendations = None  # 一度出したらクリア
+        return state
 
     # フォールバック
-    return {"bot_msg": "うまく解析できませんでした。もう少し詳しく教えてください！"}
+    state.bot_msg = "うまく解析できませんでした。もう少し詳しく教えてください！"
+    return state

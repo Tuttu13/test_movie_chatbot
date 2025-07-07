@@ -32,9 +32,6 @@ SYSTEM = "あなたは映画好きの日本人ユーザ向けアシスタント�
 
 
 def parse_user(state: ChatState):
-    """
-    GPT 4o に function-call で好み抽出を依頼し、差分 dict を返す
-    """
     client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     resp = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -47,28 +44,26 @@ def parse_user(state: ChatState):
     )
 
     choice = resp.choices[0]
-    if choice.finish_reason == "tool":
+    if choice.finish_reason == "tool_calls":
         args = json.loads(choice.message.tool_calls[0].function.arguments)
-        updates: dict = {}
 
-        # liked / disliked を ID へ変換しマージ
         def _merge(field: str, names: list[str]):
             ids = [GENRE_MAP.get(n.lower()) for n in names if GENRE_MAP.get(n.lower())]
             if ids:
-                profile = updates.get("profile", state.profile).model_copy(
-                    update={field: list(set(getattr(state.profile, field)) | set(ids))}
-                )
-                updates["profile"] = profile
+                # 重複しないようにマージ
+                unique_ids = list(set(getattr(state.profile, field)) | set(ids))
+                setattr(state.profile, field, unique_ids)
 
         _merge("liked_genres", args.get("liked_genres", []))
         _merge("disliked_genres", args.get("disliked_genres", []))
 
         if ask := args.get("ask"):
-            updates["pending_question"] = ask
-            updates["need_more_info"] = True
+            state.pending_question = ask
+            state.need_more_info = True
         else:
-            updates["need_more_info"] = False
-        return updates
+            state.need_more_info = False
+        return state
 
     # fallback: 情報不足
-    return {"need_more_info": True}
+    state.need_more_info = True
+    return state

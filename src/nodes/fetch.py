@@ -2,12 +2,14 @@ import os
 
 import requests
 
-from ..state import ChatState
+from state import ChatState
 
 
 def fetch_movies(state: ChatState):
     if not state.profile.liked_genres:
-        return {"need_more_info": True}
+        # 状態フラグで管理したい場合
+        state.need_more_info = True
+        return state
 
     url = "https://api.themoviedb.org/3/discover/movie"
     params = {
@@ -23,4 +25,7 @@ def fetch_movies(state: ChatState):
     resp = requests.get(url, params=params, timeout=8)
     resp.raise_for_status()
     movies = resp.json().get("results", [])[:5]  # 上位 5 件だけ
-    return {"recommendations": movies}
+
+    state.recommendations = movies
+    state.need_more_info = False
+    return state

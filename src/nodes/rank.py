@@ -1,3 +1,8 @@
 def rank_movies(state):
-    # 今回は TMDB popularity 順そのまま返す
-    return {}
+    print("test")
+    # 例えば、vote_average順にソート（降順）
+    if state.recommendations:
+        state.recommendations = sorted(
+            state.recommendations, key=lambda x: x.get("vote_average", 0), reverse=True
+        )
+    return state
