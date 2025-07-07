@@ -1,4 +1,4 @@
-from ..state import ChatState
+from state import ChatState
 
 __all__ = ["ask_clarify"]
 

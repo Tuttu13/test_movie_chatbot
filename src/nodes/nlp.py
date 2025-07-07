@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from ..state import ChatState
+from state import ChatState
 
 __all__ = ["parse_user"]
 

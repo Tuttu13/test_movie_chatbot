@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import readline  # noqa: F401 (for Unix history)
-
-from .graph import bot
-from .state import ChatState, UserProfile
+from graph import bot
+from state import ChatState, UserProfile
 
 __all__ = ["run_chat"]
 

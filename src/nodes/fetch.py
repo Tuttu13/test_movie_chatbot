@@ -5,7 +5,7 @@ from typing import Dict, cast
 
 import requests
 
-from ..state import ChatState
+from state import ChatState
 
 __all__ = ["fetch_movies"]
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List
 
-from ..state import ChatState
+from state import ChatState
 
 __all__ = ["generate_answer"]
 
