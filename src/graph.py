@@ -1,28 +1,44 @@
-"""
-graph.py
---------
-
-LangGraph の状態遷移グラフを構築し、`bot` として公開する。
-"""
-
 from langgraph.graph import StateGraph
 
-from nodes import fetch_train_info, generate_answer, parse_user
+from nodes.answer import generate_answer
+from nodes.clarify import ask_clarify
+from nodes.control import decide_action
+from nodes.fetch import fetch_movies
+from nodes.nlp import parse_user
+from nodes.rank import rank_movies
+from nodes.teach import teach_user
 from state import ChatState
 
-# ────────────────────────────────────────────────────────────────
-# グラフ構築
-# ────────────────────────────────────────────────────────────────
-_builder = StateGraph(ChatState)
+__all__ = ["bot"]
 
-_builder.add_node("parse_user", parse_user)
-_builder.add_node("fetch", fetch_train_info)
-_builder.add_node("answer", generate_answer)
+builder = StateGraph(ChatState)
 
-_builder.add_edge("parse_user", "fetch")
-_builder.add_edge("fetch", "answer")
+builder.add_node("parse_user", parse_user)
+builder.add_node("decide_action", decide_action)
+builder.add_node("ask_clarify", ask_clarify)
+builder.add_node("teach_user", teach_user)
+builder.add_node("fetch_movies", fetch_movies)
+builder.add_node("rank_movies", rank_movies)
+builder.add_node("generate_answer", generate_answer)
 
-_builder.set_entry_point("parse_user")
-_builder.set_finish_point("answer")
+builder.add_edge("parse_user", "decide_action")
 
-bot = _builder.compile()
+builder.add_conditional_edges(
+    "decide_action",
+    {
+        "ask_clarify": "ask_clarify",
+        "teach_user": "teach_user",
+        "fetch_movies": "fetch_movies",
+    },
+)
+
+builder.add_edge("ask_clarify", "generate_answer")
+builder.add_edge("teach_user", "generate_answer")
+
+builder.add_edge("fetch_movies", "rank_movies")
+builder.add_edge("rank_movies", "generate_answer")
+
+builder.set_entry_point("parse_user")
+builder.set_finish_point("generate_answer")
+
+bot = builder.compile()
