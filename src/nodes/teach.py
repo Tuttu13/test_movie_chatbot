@@ -1,11 +1,27 @@
-from state import ChatState
+import os
 
-__all__ = ["teach_user"]
+import openai
+
+from ..state import ChatState
+
+SYSTEM = "あなたは映画評論家です。"
 
 
-def teach_user(state: ChatState) -> ChatState:
-    term = state.teaching_snippet or "映画用語"
-    state.teaching_snippet = (
-        f"『{term}』は映画に関する用語です。（詳しい説明をここに挿入）"
+def teach_user(state: ChatState):
+    term = state.teaching_snippet or "映画"
+    client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    resp = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": SYSTEM},
+            {
+                "role": "user",
+                "content": f"『{term}』とは何ですか？200 字で日本語解説してください",
+            },
+        ],
     )
-    return state
+    snippet = resp.choices[0].message.content.strip()
+    return {
+        "teaching_snippet": snippet,
+        "pending_question": None,
+    }

@@ -1,41 +1,26 @@
-from __future__ import annotations
-
 import os
-from typing import Dict, cast
 
 import requests
 
-from state import ChatState
-
-__all__ = ["fetch_movies"]
+from ..state import ChatState
 
 
-def fetch_movies(state: ChatState) -> ChatState:
+def fetch_movies(state: ChatState):
     if not state.profile.liked_genres:
-        state.need_more_info = True
-        return state
+        return {"need_more_info": True}
 
     url = "https://api.themoviedb.org/3/discover/movie"
-    params: Dict[str, str | int | float] = {
-        "api_key": os.environ.get("TMDB_API_KEY", ""),
+    params = {
+        "api_key": os.getenv("TMDB_API_KEY", ""),
         "language": state.profile.language,
         "with_genres": ",".join(map(str, state.profile.liked_genres)),
+        "without_genres": ",".join(map(str, state.profile.disliked_genres)) or None,
+        "vote_average.gte": state.profile.min_rating or None,
         "sort_by": "popularity.desc",
         "page": 1,
     }
-    if state.profile.disliked_genres:
-        params["without_genres"] = ",".join(map(str, state.profile.disliked_genres))
-    if state.profile.min_rating is not None:
-        params["vote_average.gte"] = state.profile.min_rating
-
-    params = cast(Dict[str, str], {k: str(v) for k, v in params.items() if v})
-
-    try:
-        resp = requests.get(url, params=params, timeout=10)
-        resp.raise_for_status()
-        state.recommendations = resp.json().get("results", [])[:5]
-    except requests.HTTPError as e:
-        print(f"TMDB API error: {e}\nparams={params}")
-        state.recommendations = []
-
-    return state
+    params = {k: v for k, v in params.items() if v}
+    resp = requests.get(url, params=params, timeout=8)
+    resp.raise_for_status()
+    movies = resp.json().get("results", [])[:5]  # 上位 5 件だけ
+    return {"recommendations": movies}

@@ -1,3 +1,3 @@
-"""ODPT チャットボットパッケージの初期化モジュール."""
+from dotenv import load_dotenv
 
-__all__ = ["state", "nodes", "graph"]
+load_dotenv()

@@ -1,36 +1,25 @@
-from __future__ import annotations
-
 from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-__all__ = ["UserProfile", "ChatState"]
-
 
 class UserProfile(BaseModel):
-    """Long‑lived user preferences persisted between sessions."""
-
     user_id: str = "demo"
     display_name: Optional[str] = None
     language: str = "ja-JP"
-
-    liked_genres: List[int] = Field(default_factory=list)  # TMDB genre IDs
-    disliked_genres: List[int] = Field(default_factory=list)
-
-    min_rating: Optional[float] = None  # vote_average threshold (0‑10)
-
-    # Interaction history
-    watch_history: List[int] = Field(default_factory=list)
-    feedback: Dict[int, str] = Field(default_factory=dict)  # movie_id -> "up" | "down"
+    liked_genres: List[int] = []  # TMDB genre_id
+    disliked_genres: List[int] = []
+    min_rating: Optional[float] = None
+    watch_history: List[int] = []
+    feedback: Dict[int, str] = {}
 
 
 class ChatState(BaseModel):
-    """Ephemeral per‑conversation state handled by LangGraph."""
-
-    profile: UserProfile
+    profile: UserProfile = Field(default_factory=UserProfile)
     current_query: str = ""
-    recommendations: Optional[List[Dict]] = None
+    recommendations: Optional[list] = None
 
-    pending_question: Optional[str] = None  # bot→user follow‑up
-    teaching_snippet: Optional[str] = None  # short explanation to include in reply
-    need_more_info: bool = False  # ask for genre etc.
+    # 対話制御用
+    pending_question: Optional[str] = None
+    teaching_snippet: Optional[str] = None
+    need_more_info: bool = False
